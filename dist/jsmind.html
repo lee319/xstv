@@ -1,0 +1,137 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="style/jsmind.css" />
+    <script type="text/javascript" src="js/jsmind.js"></script>
+    <!--
+                enable drag-and-drop feature
+                <script type="text/javascript" src="js/jsmind.draggable.js"></script>
+            -->
+</head>
+
+<body>
+    <div id="jsmind_container"></div>
+    <script type="text/javascript">
+
+        // jsMind.prototype.add_node_detial = function (parent_node, nodeid, topic, data, idx, direction, expanded) {
+        //     if (this.get_editable()) {
+        //         var node = this.mind.add_node(parent_node, nodeid, topic, data, idx, direction, expanded);
+        //         if (!!node) {
+        //             this.view.add_node(node);
+        //             this.layout.layout();
+        //             this.view.show(false);
+        //             this.view.reset_node_custom_style(node);
+        //             this.expand_node(parent_node);
+        //             this.invoke_event_handle(jsMind.event_type.edit, { evt: 'add_node', data: [parent_node.id, nodeid, topic, data], node: nodeid });
+        //         }
+        //         return node;
+        //     } else {
+        //         logger.error('fail, this mind map is not editable');
+        //         return null;
+        //     }
+        // };
+
+        // jsMind.prototype.edit_layout_open = function (node) {
+        //     if (!jsMind.util.is_node(node)) {
+        //         var the_node = this.get_node(node);
+        //         if (!the_node) {
+        //             logger.error('the node[id=' + node + '] can not be found.');
+        //             return;
+        //         } else {
+        //             this.edit_layout_close();
+        //             console.log("open layout: " + node);
+        //             console.log("data: ", this.get_node(node));
+        //             //update_node
+        //             //remove_node
+        //             //jm.get_data()
+        //             //jm.get_node("easy2").topic="aaa"
+        //             //jm.get_node("easy2")._data.view.element.textContent="aaa"
+        //             console.log(this.get_node(node)._data.view.element);
+        //             //node._data.view.element.removeChild(this.e_editor);
+        //         }
+        //     }
+        // };
+
+        // jsMind.prototype.edit_layout_close = function () {
+        //     //some code
+        //     console.log("close layout");
+        // };
+
+        // jsMind.prototype.mousedown_handle = function (e) {
+        //     if (!this.options.default_event_handle['enable_mousedown_handle']) {
+        //         return;
+        //     }
+        //     var element = e.target || event.srcElement;
+        //     var nodeid = this.view.get_binded_nodeid(element);
+        //     console.log(nodeid)
+        //     if (!!nodeid) {
+        //         this.select_node(nodeid);
+        //         this.edit_layout_open(nodeid);
+        //     } else {
+        //         this.edit_layout_close();
+        //         this.select_clear();
+        //     }
+        // };
+
+
+
+
+        var mind = {
+            // 3 data formats were supported ...
+            // see Documents for more information
+            "meta": {
+                "name": "test",
+                "author": "Ken",
+                "version": 'v1.0.0'
+            },
+            "format": "node_tree",
+            //"format":"node_array",
+            "data": {
+                "id": "root", "topic": "媒资", "children": [
+                    {
+                        "id": "easy", "topic": "影视", "expanded": true, "bbb": "ccc", "children": [
+                            {
+                                "id": "easy1", "topic": "动作", "children": [
+                                    { "id": "easy11", "topic": "古装" },
+                                ]
+                            },
+                            { "id": "easy2", "topic": "爱情" },
+                            { "id": "easy3", "topic": "喜剧" }
+                        ]
+                    },
+                    {
+                        "id": "easyA", "topic": "电视剧", "expanded": true, "children": [
+                            { "id": "easyA1", "topic": "Easy to show" },
+                            { "id": "easyA2", "topic": "Easy to edit" },
+                            { "id": "easyA3", "topic": "Easy to store" },
+                            { "id": "easyA4", "topic": "Easy to embed" }
+                        ]
+                    },
+                    {
+                        "id": "easyB", "topic": "电视剧", "expanded": true, "children": [
+                            { "id": "easyB1", "topic": "Easy to show" },
+                            { "id": "easyB2", "topic": "Easy to edit" },
+                            { "id": "easyB3", "topic": "Easy to store" },
+                            { "id": "easyB4", "topic": "Easy to embed" }
+                        ]
+                    }
+                 
+                   
+                ]
+            }
+        };
+        var options = {
+            container: 'jsmind_container',
+            theme: 'orange',
+            editable: true,
+            default_event_handle: { enable_dblclick_handle: false }
+        };
+        var jm = new jsMind(options);
+        jm.show(mind);
+        //jm.add_node(jm.get_node("root"), 'test', 'node1')
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1013 @@
+<style>
+  .layout-recommend-table {
+        clear: both;
+    }
+
+    .layout-recommend-page {
+        float: right;
+        margin-top: 10px;
+    }
+
+    .span {
+        font-size: 14px;
+        margin: 15px;
+        color: #495060;
+        padding-bottom: 20px;
+    }
+
+    .layout-recommend .ivu-poptip-confirm .ivu-poptip-body .ivu-icon {
+        font-size: 16px;
+        color: #ff9900;
+        line-height: 18px;
+        position: absolute;
+        margin-left: -50px;
+    }
+
+    .ivu-table th,
+    .ivu-table td {
+        height: 40px;
+    }
+</style>
+<template>
+  <div class="layout-recommend">
+    <!-- 搜索 -->
+    <div class="layout-recommend-search">
+      <div style="float: left;">
+        <Form :model="search" label-position="right" inline>
+          <FormItem label="所属分类:" :label-width="70">
+            <Select style="width:200px" v-model="search.category_id" placeholder="请选择所属分类...">
+              <!-- <Option value="">全部</Option> -->
+              <Option v-for="item in Taxonomy" :value="item.id" :key="item.id">{{item.name}}</Option>
+            </Select>
+          </FormItem>
+          <FormItem label="名称" :label-width="50">
+            <Input v-model="search.name" style="width:200px" placeholder="请输入名称..."></Input>
+          </FormItem>
+          <FormItem label="状态:" :label-width="50">
+            <Select style="width:200px" v-model="search.status">
+              <Option value="">全部</Option>
+              <Option :value="0">下线</Option>
+              <Option :value="1">上线</Option>
+            </Select>
+          </FormItem>
+          <FormItem>
+            <Button type="primary" @click="query">搜索</Button>
+          </FormItem>
+        </Form>
+      </div>
+      <!-- 添加 -->
+      <div style="float: right;">
+        <Button type="success" @click="modalAddBtn1">添加</Button>
+        <Modal v-model="modalAdd" title="添加" width="600">
+          <div slot="footer">
+            <Button @click="addOk1" type="primary">确定</Button>
+          </div>
+          <Form :model="info" label-position="right" :label-width="100">
+            <!-- <FormItem label="所属模版:">
+                            <Input v-model="info.input1"></Input>
+                        </FormItem> -->
+            <FormItem label="分类/虚拟分类:">
+              <Input v-model="info.category_id" placeholder="请输入分类/虚拟分类..."></Input>
+            </FormItem>
+            <FormItem label="topic名称:">
+              <Input v-model="info.name" placeholder="请输入topic名称..."></Input>
+            </FormItem>
+            <FormItem label="显示名称:">
+              <Input v-model="info.title" placeholder="请输入显示名称..."></Input>
+            </FormItem>
+            <FormItem label="排序ID:">
+              <Input v-model="info.order" placeholder="请输入排序ID..."></Input>
+            </FormItem>
+            <!-- <FormItem label="状态:">
+                            <Select v-model="info.status" style="width:469px" placeholder="请选择状态...">
+                                <Option :value="0">下线</Option>
+                                <Option :value="1">上线</Option>
+                            </Select>
+                        </FormItem> -->
+            <FormItem label="描述:">
+              <Input v-model="info.desc" placeholder="请输入描述...." type="textarea" :rows="4"></Input>
+            </FormItem>
+            <FormItem>
+              <Checkbox v-model="edit.is_super" :true-value="1" :false-value="0">包含分类下所有视频</Checkbox>
+            </FormItem>
+            <FormItem label="自动关联数据" style="border-bottom: 1px solid #cccccc;">
+            </FormItem>
+            <FormItem inline v-for="(itema,k11) in addAttrOpsList" :key="k11">
+              <Select style="width:120px" @on-change="changeAttrOps(itema)" v-model="itema.attr_name">
+                <Option v-for="(item,kkk) in cityList" :value="item.attr_name" :key="kkk">{{
+                  item.attr_name }}</Option>
+              </Select>
+              <Select style="width:120px;margin-left: 5px;" v-model="itema.ops">
+                <Option v-for="(item,kkk1) in itema.attrOps" :value="item" :key="kkk1">{{ item }}</Option>
+              </Select>
+              <Input v-model="itema.val" style="width: 150px;margin-left: 5px;" />
+              <Button icon="ios-close" @click="delAttrOps(1,k11)"></Button>
+            </FormItem>
+            <FormItem>
+              <Button type="primary" @click="addAttrOpsList.push({attr_name:'',ops:'',val:'',attrOps:[]})">增加条件</Button>
+            </FormItem>
+
+          </Form>
+        </Modal>
+      </div>
+    </div>
+    <!-- topic表格 -->
+    <div class="layout-recommend-table">
+      <Table border :columns="columns1" :data="data1"></Table>
+    </div>
+    <div class="layout-recommend-page">
+      <Page :total="total" :current="page" :page-size="pageSize" @on-change="changePage" show-elevator />
+    </div>
+    <!-- 内容维护 -->
+    <div>
+      <Modal v-model="modalMain" title="内容维护" width="1100" :transfer="false">
+        <div style="float: left;">
+          <Form :model="search2" label-position="right" inline>
+            <FormItem label="导演:" :label-width="40">
+              <Input v-model="search2.director" style="width: 200px;" placeholder="请输入导演..."></Input>
+            </FormItem>
+            <FormItem label="年代" :label-width="40">
+              <Input v-model="search2.year" style="width: 200px;" placeholder="请输入年代..."></Input>
+            </FormItem>
+            <FormItem>
+              <Button type="primary" @click="query2">搜索</Button>
+            </FormItem>
+          </Form>
+        </div>
+        <div>
+          <Button type="success" @click="modalAddBtn" style="float: right;margin-bottom: 10px">添加</Button>
+          <Modal v-model="modalAdd1" title="添加节目" :transfer="true" width="1200">
+            <div slot="footer">
+              <a @click="addCancel" class="span">取消</a>
+              <Button @click="addOk" type="primary">确定</Button>
+            </div>
+            <div>
+              <Form :model="search1" label-position="right" inline>
+                <FormItem label="节目名称:" :label-width="70">
+                  <Input v-model="search1.title" style="width:200px" placeholder="请输入节目名称..."></Input>
+                </FormItem>
+                <FormItem label="年代:" :label-width="40">
+                  <Input v-model="search1.year" style="width:200px" placeholder="请输入年代..."></Input>
+                </FormItem>
+                <FormItem label="导演:" :label-width="40">
+                  <Input v-model="search1.director" style="width:200px" placeholder="请输入导演..."></Input>
+                </FormItem>
+                <FormItem>
+                  <Button type="primary" @click="query1">搜索</Button>
+                </FormItem>
+              </Form>
+            </div>
+            <Table border ref="selection" :columns="columns3" :data="data3" @on-select="checkBoxlist" @on-select-cancel="checkBoxlistCancel"
+              @on-select-all="checkBoxlist"></Table>
+            <div class="layout-recommend-page">
+              <Page :total="total2" :current="page2" :page-size="pageSize2" @on-change="changePage2" show-elevator />
+            </div>
+            <div style="clear: both;"></div>
+          </Modal>
+        </div>
+        <Table border :columns="columns2" :data="data2" style="clear: both;"></Table>
+        <div class="layout-recommend-page">
+          <Page :total="total1" :current="page1" :page-size="pageSize1" @on-change="changePage1" show-elevator />
+        </div>
+        <div style="clear: both;"></div>
+      </Modal>
+    </div>
+    <!-- 修改 -->
+    <Modal v-model="modalEdit" title="修改" width="600">
+      <div slot="footer">
+        <a @click="modalEdit=false" class="span">取消</a>
+        <Button @click="editOk" type="primary">确定</Button>
+      </div>
+      <Form :model="edit" label-position="right" :label-width="100">
+        <FormItem label="分类/虚拟分类:">
+          <Input v-model="edit.category_id"></Input>
+        </FormItem>
+        <FormItem label="topic名称:">
+          <Input v-model="edit.name"></Input>
+        </FormItem>
+        <FormItem label="显示名称:">
+          <Input v-model="edit.title"></Input>
+        </FormItem>
+        <FormItem label="排序ID:">
+          <Input v-model="edit.order"></Input>
+        </FormItem>
+        <FormItem label="状态:">
+          <Select v-model="edit.status" placeholder="请选择状态...">
+            <Option :value="0">下线</Option>
+            <Option :value="1">上线</Option>
+          </Select>
+        </FormItem>
+        <FormItem>
+          <Checkbox v-model="edit.is_super" :true-value="1" :false-value="0">包含分类下所有视频</Checkbox>
+        </FormItem>
+        <FormItem label="自动关联数据" style="border-bottom: 1px solid #cccccc;">
+        </FormItem>
+        <FormItem inline v-for="(itema,k11) in upAttrOpsList" :key="k11">
+          <Select style="width:120px" @on-change="changeAttrOps(itema)" v-model="itema.attr_name">
+            <Option v-for="(item,kkk) in cityList" :value="item.attr_name" :key="kkk">{{ item.attr_name }}</Option>
+          </Select>
+          <Select style="width:120px;margin-left: 5px;" v-model="itema.ops">
+            <Option v-for="(item,kkk1) in itema.attrOps" :value="item" :key="kkk1">{{ item }}</Option>
+          </Select>
+          <Input placeholder="Enter something..." v-model="itema.val" style="width: 150px;margin-left: 5px;" />
+          <Button icon="ios-close" @click="delAttrOps(2,k11)"></Button>
+        </FormItem>
+        <FormItem>
+          <Button type="primary" @click="upAttrOpsList.push({attr_name:'',ops:'',val:'',attrOps:[]})">增加条件</Button>
+        </FormItem>
+        <!-- <FormItem label="描述:">
+                    <Input v-model="edit.desc"></Input>
+                </FormItem> -->
+      </Form>
+    </Modal>
+    <!-- 内容修改排序id -->
+    <Modal v-model="modalEdit1" title="修改">
+      <div slot="footer">
+        <a @click="modalEdit1=false" class="span">取消</a>
+        <Button @click="editOk1" type="primary">确定</Button>
+      </div>
+      <Form :model="edit1" label-position="right" :label-width="100" ref="edit1" :rules="ruleValidate">
+        <FormItem label="排序id" prop="topic_order">
+          <Input v-model="edit1.topic_order"></Input>
+        </FormItem>
+      </Form>
+    </Modal>
+  </div>
+</template>
+<script>
+  var moment = require("moment");
+  export default {
+    data() {
+      return {
+        addAttrOpsList: [], //添加条件列表
+        upAttrOpsList: [], // 修改条件列表
+        attrOps: [], // 第二个下拉框
+        //搜索
+        search: {
+          category_id: '',
+          name: '',
+          status: ''
+        },
+        search1: {
+          year: '',
+          title: '',
+          director: '',
+        },
+        search2: {
+          year: '',
+          director: '',
+        },
+        //添加
+        info: {},
+        modalAdd: false,
+        //搜索下拉框
+        Taxonomy: [],
+        //内容维护
+        modalMain: false,
+        //表格添加
+        modalAdd1: false,
+        cityList: [],
+        cityList1: [],
+        cityList2: [],
+        //topic分页
+        total: 0,
+        pageSize: 2,
+        page: 1,
+        // 内容维护分页
+        total1: 0,
+        pageSize1: 50,
+        page1: 1,
+
+        total2: 0,
+        pageSize2: 30,
+        page2: 1,
+
+        //修改
+        edit: {},
+        is_super: 0,
+        modalEdit: false,
+
+        //修改排序id
+        edit1: {
+          topic_order: ''
+        },
+        modalEdit1: false,
+        //修改排序id
+        listId: '',
+        videoId1: '',
+        //验证
+        ruleValidate: {
+          topic_order: [{
+            required: true,
+            message: '请输入排序id',
+            trigger: 'blur'
+          }]
+        },
+        //全局topicId
+        topicId: '',
+        topicIdEdit: '',
+        //保存所有添加
+        GroupList: [],
+        columns1: [
+          {
+            title: '序号',
+            type: 'index',
+            width: 70,
+            align: 'center'
+          },
+          {
+            title: '分类/虚拟分类',
+            key: 'category_name',
+            align: 'center'
+          },
+          {
+            title: 'topic名称',
+            key: 'name',
+            align: 'center'
+          },
+          {
+            title: '显示名称',
+            key: 'title',
+            align: 'center'
+          },
+          {
+            title: '排序ID',
+            key: 'order',
+            align: 'center'
+          },
+          {
+            title: '状态',
+            key: 'Isstatus',
+            align: 'center'
+          },
+          {
+            title: '创建时间',
+            key: 'create_time',
+            align: 'center'
+          },
+          {
+            title: '操作',
+            width: 300,
+            align: 'center',
+            render: (h, params) => {
+              return h('div', [
+                h('Button', {
+                  props: {
+                    type: 'primary',
+                    size: 'small',
+                  },
+                  style: {
+                    marginRight: '5px'
+                  },
+                  on: {
+                    click: () => {
+                      this.modify(params.row)
+                    }
+                  }
+                }, '修改'),
+                h(
+                  "Poptip", {
+                    props: {
+                      confirm: true,
+                      title: "确定要删除吗！",
+                      type: "error",
+                      size: "small",
+                      width: "150"
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      "on-ok": () => {
+                        this.remove(params.row);
+                      }
+                    }
+                  }, [
+                    h(
+                      "Button", {
+                        props: {
+                          type: "error",
+                          size: "small",
+                        }
+                      },
+                      "删除"
+                    )
+                  ]
+                ),
+                h(
+                  "Poptip", {
+                    props: {
+                      confirm: true,
+                      title: "确定要下线吗！",
+                      type: "error",
+                      size: "small",
+                      width: "150"
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      "on-ok": () => {
+                        this.show1(params.row);
+                      }
+                    }
+                  }, [
+                    h(
+                      "Button", {
+                        props: {
+                          type: "success",
+                          size: "small",
+                        }
+                      },
+                      params.row.Isstatus == '下线' ? '上线' : '下线'
+                    )
+                  ]
+                ),
+                h('Button', {
+                  props: {
+                    type: 'warning',
+                    size: 'small'
+                  },
+                  style: {
+                    marginRight: '5px'
+                  },
+                  on: {
+                    click: () => {
+                      console.log(params)
+                      this.show(params.row)
+                    }
+                  }
+                }, '内容维护')
+              ]);
+            }
+          }
+        ],
+        data1: [],
+        columns2: [{
+          title: '序号',
+          type: 'index',
+          width: 70,
+          align: 'center'
+        },
+        {
+          title: '节目名称',
+          key: 'title',
+          align: 'center',
+          width: 200
+        },
+        {
+          title: '节目分类',
+          key: 'category_name',
+          align: 'center'
+        },
+        {
+          title: '排序',
+          key: 'topic_order',
+          align: 'center'
+        },
+        {
+          title: '语言',
+          key: 'language',
+          align: 'center'
+        },
+        {
+          title: '导演',
+          key: 'director',
+          align: 'center'
+        },
+        {
+          title: '上映年代',
+          key: 'release_year',
+          align: 'center'
+        },
+        {
+          title: '创建时间',
+          key: 'create_time',
+          align: 'center',
+          width: 150
+        },
+        {
+          title: '操作',
+          align: 'center',
+          width: 150,
+          render: (h, params) => {
+            return h('div', [
+              h('Button', {
+                props: {
+                  type: 'primary',
+                  size: 'small',
+                },
+                style: {
+                  marginRight: '5px'
+                },
+                on: {
+                  click: () => {
+                    this.modify1(params.row)
+                  }
+                }
+              }, '修改'),
+              h(
+                "Poptip", {
+                  props: {
+                    confirm: true,
+                    title: "确定要删除吗！",
+                    type: "error",
+                    size: "small",
+                    width: "150"
+                  },
+                  style: {
+                    marginRight: '5px'
+                  },
+                  on: {
+                    "on-ok": () => {
+                      this.remove1(params.row);
+                    }
+                  }
+                }, [
+                  h(
+                    "Button", {
+                      props: {
+                        type: "error",
+                        size: "small",
+                      }
+                    },
+                    "删除"
+                  )
+                ]
+              )
+            ]);
+          }
+        }
+        ],
+        data2: [],
+        columns3: [{
+          type: 'selection',
+          width: 60,
+          align: 'center',
+          _checked: false
+        },
+        {
+          title: '节目名称',
+          key: 'title',
+          align: 'center'
+        },
+        {
+          title: '节目分类',
+          key: 'category_name',
+          align: 'center'
+        },
+        {
+          title: '导演',
+          key: 'director',
+          align: 'center'
+        },
+        {
+          title: '语言',
+          key: 'language',
+          align: 'center'
+        },
+        {
+          title: '上映年代',
+          key: 'release_year',
+          align: 'center'
+        },
+        {
+          title: '创建时间',
+          key: 'create_time',
+          align: 'center'
+        }
+        ],
+        data3: []
+      }
+    },
+    methods: {
+      delAttrOps(t, k) {
+        let ops = t == 1 ? this.addAttrOpsList : this.upAttrOpsList;
+        if (ops != null && ops.length > 0) {
+          let newOps = [];
+          ops.forEach((val, kk) => {
+            if (kk != k) {
+              newOps.push(val);
+            }
+          })
+          if (t == 1) {
+            this.addAttrOpsList = newOps;
+          } else {
+            this.upAttrOpsList = newOps;
+          }
+        }
+
+      },
+      changeAttrOps(item) {
+        this.cityList.forEach(v => {
+          if (v.attr_name == item.attr_name) {
+            item.attrOps = v.attr_ops;
+          }
+        });
+      },
+      // topic添加确定按钮
+      addOk1() {
+        console.log(333)
+        let opsList = [];
+        this.addAttrOpsList.forEach(val => {
+          if (val.attr_name != '') {
+            // opsList.push(`${val.attr_name} ${val.ops} ${val.val}`)
+            opsList.push({
+              struct_name: val.attr_name,
+              symbol: val.ops,
+              value: val.val
+            })
+          }
+        });
+        this.info.conditions = opsList;
+        console.log(this.info);
+        let self = this;
+        this.info.category_id *= 1;
+        this.info.order *= 1;
+        // this.info.status = this.info.status * 1
+        self.$http.post(this.$config.BaseURL8 + '/cms/topic/create', self.info).then(response => {
+          if (response.data.errno == 10000) {
+            console.log(response)
+            self.info = {};
+            self.getTableList();
+            self.modalAdd = false;
+            self.$Message.success("添加成功");
+          }
+        })
+      },
+      //topic添加弹框
+      modalAddBtn() {
+        this.modalAdd1 = true;
+        this.getAddList();
+        this.GroupList = [];
+        this.getSelectList2()
+      },
+      //topic表格数据
+      getTableList() {
+        let self = this;
+        if (self.search.status == undefined) {
+          self.search.status = "";
+        }
+        self.$http(this.$config.BaseURL8 + '/cms/topic/list?pageSize=' + self.pageSize + '&page=' + self.page +
+          '&status=' + self.search.status + '&category_id=' + self.search.category_id + '&name=' + self.search.name).then(
+            response => {
+              if (response.data.errno == 10000) {
+                console.log(response)
+                self.data1 = response.data.data.list;
+                response.data.data.list.forEach(val => {
+
+                  if (val.status == 1) {
+                    val.Isstatus = '上线'
+                  } else if (val.status == 0) {
+                    val.Isstatus = '下线'
+                  }
+                  // //时间转换
+                  // val.create_time = moment(val.create_time *1000).format(
+                  //     "YYYY-MM-DD"
+                  // );
+                });
+                //分页
+                self.total = response.data.data.total;
+
+                // 搜索默认值
+                if (self.data1.length > 0) {
+                  self.search.category_id = self.data1[0].category_id;
+                }
+              }
+            })
+      },
+      //topic搜索下拉框
+      getSelectList() {
+        let self = this;
+        self.$http(this.$config.BaseURL8 + '/cms/category/lists').then(response => {
+          self.Taxonomy = response.data.data.list || [];
+        })
+      },
+      //topic修改
+      modify(row) {
+        console.log(row)
+        this.getSelectList2();
+        this.modalEdit = true;
+        this.edit = row;
+        this.topicIdEdit = row.topic_id;
+
+        // 条件列表
+        let upAttrOpsList = [];
+        if (typeof this.edit.conditions == 'undefined' || this.edit.conditions == null) {
+          this.edit.conditions = [];
+        }
+
+        this.edit.conditions.forEach(val => {
+          let arr = val; //.split(' ');
+          if (arr.length == 3) {
+            let attrOps = [];
+            this.cityList.forEach(v => {
+              if (v.attr_name == arr[0]) {
+                attrOps = v.attr_ops;
+              }
+            });
+            // this.attrOps = attrOps;
+            upAttrOpsList.push({
+              attr_name: arr[0],
+              attrOps: attrOps,
+              ops: arr[1],
+              val: arr[2]
+            })
+
+          }
+        });
+        this.upAttrOpsList = upAttrOpsList;
+      },
+      //topic表格删除
+      remove(row) {
+        console.log(row)
+        let self = this;
+        self.$http.post(this.$config.BaseURL8 + '/cms/topic/delete?topic_id=' + row.topic_id).then(response => {
+          if (response.data.errno == 10000) {
+            this.$Message.success("删除成功");
+            this.getTableList();
+          }
+        })
+      },
+      //分页
+      changePage(page) {
+        this.page = page;
+        this.getTableList();
+      },
+      //topic搜索
+      query() {
+        this.page = 1
+        this.getTableList();
+      },
+      //内容维护
+      show(row) {
+        console.log(row)
+        this.modalMain = true;
+        this.topicId = row.topic_id;
+        this.getcontentList();
+      },
+      //内容维护管理列表
+      getcontentList() {
+        let self = this;
+        console.log(this.topicId)
+        self.$http(this.$config.BaseURL8 + '/cms/topic/detail?topic_id=' + this.topicId + '&pageSize=' + self.pageSize1 +
+          '&page=' + self.page1 + '&director=' + self.search2.director + '&year=' + self.search2.year).then(response => {
+            if (response.data.errno == 10000) {
+              console.log(response)
+              self.data2 = response.data.data.list || [];
+              self.total1 = response.data.data.total;
+            }
+          })
+      },
+      //添加表格 
+      getAddList() {
+        let self = this;
+        self.$http(this.$config.BaseURL8 + '/cms/media/search?year=' + this.search1.year + '&title=' + this.search1.title +
+          '&director=' + this.search1.director + '&page=' + self.page2 + '&pageSize=' + self.pageSize2).then(response => {
+            console.log(response)
+            if (response.data.errno == 10000) {
+              self.data3 = response.data.data.list;
+
+              // response.data.data.list.forEach(val => {
+              //   this.data2.forEach(val1 => {
+              //     console.log(val)
+              //     if (val.id == val1.id) {
+              //       val._checked = true
+              //     }
+              //   });
+
+              // });
+              // console.log(this.GroupList)
+
+
+              // Iscost_type 判断类型
+              response.data.data.list.forEach(val => {
+
+                if (val.cost_type == 0) {
+                  val.Iscost_type = "免费";
+                } else if (val.cost_type == 1) {
+                  val.Iscost_type = "会员";
+                } else if (val.cost_type == 2) {
+                  val.Iscost_type = "单片购买";
+                }
+
+                let sel = false;
+                this.GroupList.forEach(val1 => {
+                  if (val.id == val1.id) {
+                    sel = true;
+                  }
+                });
+                this.data2.forEach(val1 => {
+                  console.log(val)
+                  if (val.id == val1.id) {
+                    console.log(9999)
+                    sel = true;
+                  }
+                });
+                val._checked = sel;
+                if (sel == true) {
+                  val._disabled = true;
+                }
+              });
+
+              //分页
+              self.total2 = response.data.data.total;
+            }
+          })
+      },
+      //添加条件下拉框 
+      getSelectList2() {
+        let self = this;
+        self.$http(this.$config.BaseURL8 + '/cms/filter/list').then(response => {
+          if (response.data.errno == 10000) {
+            // console.log(response)
+            this.cityList = response.data.data.list;
+            this.cityList1 = response.data.data.list;
+          }
+        })
+      },
+      // 内容维护添加取消按钮
+      addCancel() {
+        this.getcontentList();
+        this.modalAdd1 = false;
+      },
+      //内容维护添加确定按钮
+      addOk() {
+        let self = this;
+        let postData = {
+          list: []
+        };
+        this.GroupList.forEach((val, key) => {
+          postData.list.push({
+            video_id: val.id,
+            video_order: key + 1
+          });
+        });
+
+        this.$http.post(this.$config.BaseURL8 + '/cms/topic/additem?topic_id=' + self.topicId, postData).then(response => {
+          console.log(response)
+          if (response.data.errno == 10000) {
+            this.modalAdd1 = false;
+            this.getcontentList();
+            this.$Message.success('添加成功!');
+          }
+        })
+      },
+      //内容维护修改确认按钮
+      editOk() {
+        let self = this;
+
+        let opsList = [];
+        this.upAttrOpsList.forEach(val => {
+          if (val.attr_name != '') {
+            opsList.push(
+              {
+                struct_name: val.attr_name,
+                symbol: val.ops,
+                value: val.val
+              }
+            )
+          }
+        });
+        this.edit.conditions = opsList;
+        this.edit.status = this.edit.status * 1;
+        this.edit.order = this.edit.order * 1;
+        this.edit.category_id = this.edit.category_id * 1
+
+        self.$http.post(this.$config.BaseURL8 + '/cms/topic/edit?topic_id=' + this.topicIdEdit, self.edit).then(
+          response => {
+            if (response.data.errno == 10000) {
+              console.log(this.topicIdEdit)
+              self.edit = {};
+              self.getTableList();
+              self.modalEdit = false;
+              self.$Message.success("修改成功");
+            }
+
+          })
+      },
+      // 内容维护修改弹框
+      modify1(row) {
+        this.modalEdit1 = true;
+        console.log(row)
+        this.edit1 = row;
+        this.videoId1 = row.id;
+      },
+      //修改确定按钮
+      editOk1(row) {
+        // console.log(row)
+        let self = this;
+        // var isValid = true;
+        // self.$refs['edit1'].validate(valid => {
+        //     if (valid == false) {
+        //         this.$Message.error('表单输入有误,请检查!')
+        //         isValid = false;
+        //     }
+        // })
+        // if (isValid == false) {
+        //     return
+        // }
+        self.$http.post(this.$config.BaseURL8 + '/cms/topic/videoreorder?topic_id=' + self.topicId + '&video_id=' +
+          self.videoId1 + '&new_order=' + self.edit1.topic_order, self.edit1, {
+            transformRequest: [function (data) {
+              let ret = ''
+              for (let it in data) {
+                ret += encodeURIComponent(it) + '=' + encodeURIComponent(data[it]) + '&'
+              }
+              return ret
+            }],
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then(response => {
+            if (response.data.errno == 10000) {
+              console.log(response)
+              self.edit1 = {};
+              self.getcontentList();
+              self.modalEdit1 = false;
+              self.$Message.success("修改成功");
+            }
+
+          })
+      },
+      //内容维护删除
+      remove1(row) {
+        console.log(row)
+        let self = this;
+        self.$http.post(this.$config.BaseURL8 + '/cms/topic/removeitem?topic_id=' + self.topicId + '&video_id=' + row.id)
+          .then(response => {
+            if (response.data.errno == 10000) {
+              this.$Message.success("删除成功");
+              this.getcontentList();
+            }
+          })
+      },
+
+      //分页
+      changePage1(page) {
+        this.page1 = page;
+        this.getcontentList();
+      },
+      //分页
+      changePage2(page) {
+        this.page2 = page;
+        this.getAddList();
+      },
+
+      //添加里面搜索
+      query1() {
+        this.page2 = 1;
+        this.getAddList();
+      },
+      query2() {
+        this.page1 = 1;
+        this.getcontentList();
+      },
+      // 选中
+      checkBoxlist(selection, row) {
+        console.log(selection);
+        console.log(row)
+        // this.GroupList.push(row)
+        this.GroupList = selection;
+      },
+      // 取消选择
+      checkBoxlistCancel(selection, row) {
+        console.log(selection);
+        console.log(row)
+        let groupList = [];
+        this.GroupList.forEach(val => {
+          if (val.id != row.id) {
+            groupList.push(val)
+          }
+        });
+        this.GroupList = groupList
+      },
+      // 上下线
+      show1(row) {
+        let self = this;
+        console.log(row)
+        self.$http.post(this.$config.BaseURL8 + '/cms/topic/setstatus?topic_id=' + row.topic_id + '&status=' + Math.abs(
+          row.status - 1)).then(response => {
+            // this.getTableList()
+            if (response.data.errno == 10000) {
+              this.getTableList();
+            }
+          })
+      },
+      modalAddBtn1() {
+        this.modalAdd = true;
+        this.getSelectList2();
+      },
+      // checkChange(){
+      //     this.is_super = 1;
+      //     console.log(this.is_super)
+      // }
+    },
+    mounted() {
+      //表格数据
+      this.getTableList();
+      this.getSelectList();
+    }
+  }
+
+</script>
